@@ -10,6 +10,11 @@ let
     };
     in (pkgs.callPackage "${src}/libtorch/release.nix" { });
 
+  jupyter = pkgs: import (builtins.fetchGit {
+    url = https://github.com/tweag/jupyterWith;
+    rev = "119c85563631998281a3eb8e596128e06e66752d";
+  }) { inherit pkgs; };
+
   overlayShared = pkgsNew: pkgsOld: {
     inherit (libtorch_src pkgsOld)
       libtorch_cpu
@@ -17,6 +22,16 @@ let
       libtorch_cudatoolkit_10_1
     ;
 
+    jupyterEnvironment =
+      let iHaskell = (jupyter pkgsOld).kernels.iHaskellWith {
+            name = "haskell";
+            packages = p: with p; [ hvega formatting hasktorch_cpu ];
+          };
+      in 
+        (jupyter pkgsOld).jupyterlabWith {
+          kernels = [ iHaskell ];
+        };
+    
     haskell = pkgsOld.haskell // {
       packages = pkgsOld.haskell.packages // {
         "${compiler}" = pkgsOld.haskell.packages."${compiler}".override (old: {
@@ -140,7 +155,7 @@ let
   };
 
   pkgs = import src {
-    config = { allowUnsupportedSystem = true; allowUnfree = true; };
+    config = { allowUnsupportedSystem = true; allowUnfree = true; allowBroken = true; };
     overlays = [ overlayShared ];
   };
 
@@ -174,6 +189,8 @@ in
       hasktorch-examples_cudatoolkit_9_2
       hasktorch-examples_cudatoolkit_10_1
     ;
+    jupyterEnvironment = pkgs.jupyterEnvironment.env;
+
     hasktorch-docs = (
       (import ./haddock-combine.nix {
         runCommand = pkgs.runCommand;

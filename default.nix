@@ -7,6 +7,7 @@ in
       hasktorch_cpu
       hasktorch-examples_cpu
       hasktorch-docs
+      jupyterEnvironment
     ;
 
     ${shared.nullIfDarwin "libtorch-ffi_cudatoolkit_9_2"} = shared.libtorch-ffi_cudatoolkit_9_2;
