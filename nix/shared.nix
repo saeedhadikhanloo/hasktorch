@@ -12,10 +12,10 @@ let
 
   jupyter-src = pkgs:
     let src = pkgs.fetchFromGitHub {
-          owner  = "tweag";
+          owner  = "junjihashimoto";
           repo   = "jupyterWith";
-          rev    = "119c85563631998281a3eb8e596128e06e66752d";
-          sha256 = "0xrzms6qa2xg9iin3d4dr04rpfdhkdhd9484824p4kgk6da4l7yb";
+          rev    = "822edc2172baf7a7fe0ab9355bd3e30d65c36e24";
+          sha256 = "13zdjiyv0zhhdv1afb4r0i6q5xc8lqqai0j3kfsa0q45l0bck8pd";
     };
     in "${src}";
   jupyterSrc = pkgs: (jupyter-src pkgs) + "/nix";
@@ -30,9 +30,9 @@ let
     ;
 
     jupyterEnvironment =
-      let iHaskell = (jupyter pkgsNew).kernels.iHaskellWith {
+      let iHaskell = (jupyter pkgsOld).kernels.iHaskellWith {
             name = "haskell";
-            packages = p: with p; [ hvega formatting pkgs.haskell.packages."${compiler}".hasktorch_cpu ];
+            packages = p: with p; [ hvega formatting pkgsNew.haskell.packages."${compiler}".hasktorch_cpu ];
           };
       in 
         (jupyter pkgsOld).jupyterlabWith {
