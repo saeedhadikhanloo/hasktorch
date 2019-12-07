@@ -10,10 +10,17 @@ let
     };
     in (pkgs.callPackage "${src}/libtorch/release.nix" { });
 
-  jupyter = pkgs: import (builtins.fetchGit {
-    url = https://github.com/tweag/jupyterWith;
-    rev = "119c85563631998281a3eb8e596128e06e66752d";
-  }) { inherit pkgs; };
+  jupyter-src = pkgs:
+    let src = pkgs.fetchFromGitHub {
+          owner  = "tweag";
+          repo   = "jupyterWith";
+          rev    = "119c85563631998281a3eb8e596128e06e66752d";
+          sha256 = "0xrzms6qa2xg9iin3d4dr04rpfdhkdhd9484824p4kgk6da4l7yb";
+    };
+    in "${src}";
+  jupyterSrc = pkgs: (jupyter-src pkgs) + "/nix";
+  jupyter-nix = pkgs: import (jupyterSrc pkgs) {};
+  jupyter = (pkgs: import (jupyter-src pkgs) { pkgs = (jupyter-nix pkgs);});
 
   overlayShared = pkgsNew: pkgsOld: {
     inherit (libtorch_src pkgsOld)
@@ -23,9 +30,9 @@ let
     ;
 
     jupyterEnvironment =
-      let iHaskell = (jupyter pkgsOld).kernels.iHaskellWith {
+      let iHaskell = (jupyter pkgsNew).kernels.iHaskellWith {
             name = "haskell";
-            packages = p: with p; [ hvega formatting hasktorch_cpu ];
+            packages = p: with p; [ hvega formatting pkgs.haskell.packages."${compiler}".hasktorch_cpu ];
           };
       in 
         (jupyter pkgsOld).jupyterlabWith {
